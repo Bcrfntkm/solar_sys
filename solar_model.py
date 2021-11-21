@@ -1,19 +1,21 @@
-# coding: utf-8
-# license: GPLv3
-
 G = gravitational_constant = 6.67408E-11
-"""Гравитационная постоянная Ньютона G"""
+# Гравитационная постоянная Ньютона G
+Sm = 1  # масса звезды
+
+
+def Triangle(x, y):
+    return (x * x + y * y) ** 0.5
 
 
 def force(A, B):
     """
-    Функция рассчитывает гравитационное взамодействие между телами (объектами) А и В
+    Рассчитываем взаимное влияние двух тел
     """
     # расстояния между телами по осям
     dx = B.x - A.x
     dy = B.y - A.y
     # расстояние между телами
-    r = (dx * dx + dy * dy) ** 0.5
+    r = Triangle(dx, dy)
     # модуль силы
     F = G * A.m * B.m / r / r
     # обработка деления на 0
@@ -35,8 +37,10 @@ def force(A, B):
     B.Fy -= Fy
 
 
-# рассчитываем все взаимные влияниия сил
 def calculate_forces(space_objects):
+    """
+    Рассчитываем все взаимные влияниия сил
+    """
     # обнуляем все силы на всех телах
     for i in space_objects:
         i.Fx = i.Fy = 0
@@ -55,14 +59,12 @@ def calculate_force(body, space_objects):
     **body** — тело, для которого нужно вычислить дейстующую силу.
     **space_objects** — список объектов, которые воздействуют на тело.
     """
-
     body.Fx = body.Fy = 0
     for obj in space_objects:
         if body == obj:
             continue  # тело не действует гравитационной силой на само себя!
         r = ((body.x - obj.x) ** 2 + (body.y - obj.y) ** 2) ** 0.5
         r = max(r, body.R)
-        pass
 
 
 def move_space_object(body, dt):
@@ -82,14 +84,30 @@ def move_space_object(body, dt):
     body.y += body.Vy * dt
 
 
+def calculates_for_arrays(body):
+    """заполняем массивы для последующего вывода графиков"""
+    global Sm
+    # определяем вектор от начала координат
+    r = Triangle(body.x, body.y)
+    V = Triangle(body.Vx, body.Vy)
+    body.rV.append((body.x * body.Vy - body.y * body.Vx) * body.m)
+    # определяем разность энергий
+    if r != 0:
+        body.En.append((V * V / 2 - G * Sm / r) * body.m)
+    else:
+        body.En.append(0)
+
+
 def recalculate_space_objects_positions(space_objects, dt):
     """Пересчитывает координаты объектов.
     Параметры:
-    **space_objects** — список оьъектов, для которых нужно пересчитать координаты.
+    **space_objects** — список объектов, для которых нужно пересчитать координаты.
     **dt** — шаг по времени
     """
     calculate_forces(space_objects)
     for body in space_objects:
+        # заполняем массивы для последующего вывода графиков
+        calculates_for_arrays(body)
         move_space_object(body, dt)
 
 
